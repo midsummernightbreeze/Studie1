@@ -38,10 +38,8 @@ wtp_space_results <- function(each_user_results){
   wtp_pref <- coef(mnl_pref_each)
   for(i in 1:7){
     if(i!=1){
-      
       wtp_pref[i]=-(wtp_pref[i]/wtp_pref[1])
     }
-    
   }
 
   mnl_wtp_each <- logitr(
