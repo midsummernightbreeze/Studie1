@@ -1,0 +1,182 @@
+---
+title: "studie1"
+output: html_documentq2333 Q2d
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE}
+#Load packages
+if (!require(MASS)) {
+  install.packages("MASS")
+  require(MASS)
+}
+
+if (!require(mlogit)) {
+  install.packages("mlogit")
+  require(mlogit)
+}
+
+if (!require(tidyr)) {
+  install.packages("tidyr")
+  require(tidyr)
+}
+
+if (!require(tidyverse)) {
+  install.packages("tidyverse")
+  require(tidyverse)
+}
+
+if (!require(stringr)) {
+  install.packages("stringr")
+  require(stringr)
+}
+
+if (!require(AER)) {
+  install.packages("AER")
+  require(AER)
+}
+
+
+if (!require(survival)) {
+  install.packages("survival")
+  require(survival)
+}
+
+if (!require(coin)) {
+  install.packages("coin")
+  require(coin)
+}
+
+if (!require(GMCM)) {
+  install.packages("GMCM")
+  require(GMCM)
+}
+
+
+if (!require(psych)) {
+  install.packages("psych")
+  require(psych)
+}
+
+if (!require(logitr)) {
+  install.packages("logitr")
+  require(logitr)
+}
+
+if (!require(dplyr)) {
+  install.packages("dplyr")
+  require(dplyr)
+}
+
+if (!require(forcats)) {
+  install.packages("forcats")
+  require(forcats)
+}
+
+if (!require(data.table)) {
+  install.packages("data.table")
+  require(data.table)
+}
+
+if (!require(remotes)) {
+  install.packages("remotes")
+  require(remotes)
+}
+
+if (!require(maddTools)) {
+  remotes::install_github("emse-madd-gwu/maddTools")
+  require(maddTools)
+}
+
+if (!require(ggplot2)) {
+  install.packages("ggplot2")
+  require(ggplot2)
+}
+
+if (!require(mded)) {
+  install.packages("mded")
+  require(mded)
+}
+
+if (!require(xtable)) {
+  install.packages("xtable")
+  require(xtable)
+}
+
+if (!require(texreg)) {
+  install.packages("texreg")
+  require(texreg)
+}
+
+if (!require(here)) {
+  install.packages("here")
+  require(here)
+}
+
+if (!require(tables)) {
+  install.packages("tables")
+  require(tables)
+}
+if (!require(Hmisc)) {
+  install.packages("Hmisc")
+  require(Hmisc)
+}
+
+```
+
+### Load raw Data and impute
+```{r}
+final_d_Tingyu <- read.table("final_d_Tingyu.csv", header=TRUE,
+   sep=",")
+imputed_mean <- final_d_Tingyu
+imputed_median <- final_d_Tingyu
+for(i in 13:112){
+  imputed_mean[,c(i)] <- impute(final_d_Tingyu[,c(i)], mean) # mean impute
+  imputed_median[,c(i)] <- impute(final_d_Tingyu[,c(i)],median) # median impute
+}
+```
+
+### Load data from all_results-22-08-26 and extract selected combinations
+```{r}
+source(here("functions.R"))
+survey_data <- read.table("all_results-22-08-26.csv", header=TRUE,
+    sep=",")
+
+wta_data = survey_data %>% filter(dce_type=="WTA")
+wtp_data = survey_data %>% filter(dce_type=="WTP")
+
+
+survey_ids = survey_data[,1]
+existing_survey_id = unique(survey_ids)
+
+df_newdata <- data.frame(survey_data)
+df_newdata <- df_newdata %>% filter(sas_block_id == 1 & is_selected_int == 1)
+df_newdata <- df_newdata[-c(2,4:6)]
+
+wtp_data_germany <- wtp_data %>% filter(demo_nationality == 'german')
+total_wtp_germany <- wtp_space_results(wtp_data_germany)
+
+for(i in 1: 409){
+  each_user_results_wta = wta_data %>% filter(survey_id == existing_survey_id[i])
+  each_user_results_wtp = wtp_data %>% filter(survey_id == existing_survey_id[i])
+
+
+    wta_estimate <- wtp_space_results(each_user_results_wta)
+    wtp_estimate <- wtp_space_results(each_user_results_wtp)
+ 
+    for(j in 1:6){
+    df_newdata[2*i-1,j+2]=wta_estimate[j+1]
+    df_newdata[2*i,j+2]=wtp_estimate[j+1]
+    }
+}
+
+
+```
+
+### exporting the rearranged data
+```{r}
+write.csv(df_newdata, "rearranged_data.csv", row.names=FALSE)
+```
